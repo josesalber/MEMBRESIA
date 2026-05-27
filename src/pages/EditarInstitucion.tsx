@@ -4,14 +4,22 @@ import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
-import { institucionesService, UpdateInstitucionDTO } from '../services/instituciones.service';
+import { ArrowLeft, Save, RefreshCcw } from 'lucide-react';
+import {
+  institucionesService,
+  UpdateInstitucionDTO,
+  RenovarInstitucionDTO,
+  TIPOS_INSTITUCION,
+  tipoInstitucionLabel,
+} from '../services/instituciones.service';
 import { Loader } from '../components/Loader';
 import { useEffect } from 'react';
+import { getApiErrorMessage } from '../lib/apiError';
+import { licenciaService } from '../services/licencia.service';
 
 const institucionSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-  tipo: z.enum(['Colegio', 'Instituto', 'Academia'] as const),
+  tipo: z.enum(['COLEGIO', 'INSTITUTO', 'ACADEMIA'] as const),
   emailContacto: z.string().email('Email inválido'),
   subdominio: z.string().min(3, 'El subdominio debe tener al menos 3 caracteres'),
   backendUrl: z.string().url('URL inválida'),
@@ -31,9 +39,16 @@ export function EditarInstitucion() {
     enabled: !!id,
   });
 
+  const { data: validacionLicencia } = useQuery({
+    queryKey: ['licencia', id],
+    queryFn: () => licenciaService.validarPorId(id!),
+    enabled: !!id,
+  });
+
   const {
     register,
     handleSubmit,
+    getValues,
     reset,
     formState: { errors },
   } = useForm<InstitucionForm>({
@@ -61,10 +76,36 @@ export function EditarInstitucion() {
       toast.success('Cambios guardados');
       navigate('/instituciones');
     },
-    onError: () => {
-      toast.error('No se pudieron guardar los cambios');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudieron guardar los cambios'));
     },
   });
+
+  const renovarMutation = useMutation({
+    mutationFn: (data: RenovarInstitucionDTO) => institucionesService.renovar(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['instituciones'] });
+      queryClient.invalidateQueries({ queryKey: ['institucion', id] });
+      toast.success('Licencia renovada');
+      navigate('/instituciones');
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudo renovar la licencia'));
+    },
+  });
+
+  const handleRenew = () => {
+    renovarMutation.mutate({
+      fechaVencimiento: getValues('fechaVencimiento'),
+    });
+  };
+
+  const isVencida = institucion?.estado === 'VENCIDO';
+
+  const tipoOptions = TIPOS_INSTITUCION.map((tipo) => ({
+    value: tipo,
+    label: tipoInstitucionLabel[tipo],
+  }));
 
   const onSubmit = (data: InstitucionForm) => {
     updateMutation.mutate(data);
@@ -88,6 +129,31 @@ export function EditarInstitucion() {
           <p className="text-gray-600">Actualiza la información de {institucion?.nombre}</p>
         </div>
       </div>
+
+      {institucion && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Estado</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">{institucion.estado}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Licencia</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              {validacionLicencia ? (validacionLicencia.valida ? 'Válida' : `Inválida · ${validacionLicencia.motivo}`) : 'Sin validar'}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">API Key</p>
+            <p className="mt-1 break-all text-sm font-semibold text-gray-900">{institucion.apiKey}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500">Creación</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              {new Date(institucion.fechaCreacion).toLocaleString('es-ES')}
+            </p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -113,9 +179,11 @@ export function EditarInstitucion() {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
             >
               <option value="">Selecciona un tipo</option>
-              <option value="Colegio">Colegio</option>
-              <option value="Instituto">Instituto</option>
-              <option value="Academia">Academia</option>
+              {tipoOptions.map((tipo) => (
+                <option key={tipo.value} value={tipo.value}>
+                  {tipo.label}
+                </option>
+              ))}
             </select>
             {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo.message}</p>}
           </div>
@@ -176,7 +244,7 @@ export function EditarInstitucion() {
           </div>
         </div>
 
-        <div className="flex gap-4 mt-8">
+        <div className="flex flex-col md:flex-row gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate('/instituciones')}
@@ -192,6 +260,17 @@ export function EditarInstitucion() {
             <Save size={20} />
             {updateMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
           </button>
+          {isVencida && (
+            <button
+              type="button"
+              onClick={handleRenew}
+              disabled={renovarMutation.isPending}
+              className="flex-1 px-6 py-3 border border-orange-200 bg-orange-50 text-orange-700 font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <RefreshCcw size={20} />
+              {renovarMutation.isPending ? 'Renovando...' : 'Renovar licencia'}
+            </button>
+          )}
         </div>
       </form>
     </div>

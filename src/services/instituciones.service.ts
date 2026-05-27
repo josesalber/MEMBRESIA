@@ -1,19 +1,27 @@
 import axios from '../lib/axios';
 
 export type EstadoInstitucion = 'ACTIVO' | 'SUSPENDIDO' | 'VENCIDO';
-export type TipoInstitucion = 'Colegio' | 'Instituto' | 'Academia';
+export type TipoInstitucion = 'COLEGIO' | 'INSTITUTO' | 'ACADEMIA';
+
+export const TIPOS_INSTITUCION: TipoInstitucion[] = ['COLEGIO', 'INSTITUTO', 'ACADEMIA'];
+
+export const tipoInstitucionLabel: Record<TipoInstitucion, string> = {
+  COLEGIO: 'Colegio',
+  INSTITUTO: 'Instituto',
+  ACADEMIA: 'Academia',
+};
 
 export interface Institucion {
-  id: string;
+  id: number;
   nombre: string;
   tipo: TipoInstitucion;
   emailContacto: string;
   subdominio: string;
   backendUrl: string;
+  apiKey: string;
   estado: EstadoInstitucion;
   fechaVencimiento: string;
-  createdAt?: string;
-  updatedAt?: string;
+  fechaCreacion: string;
 }
 
 export interface CreateInstitucionDTO {
@@ -27,13 +35,17 @@ export interface CreateInstitucionDTO {
 
 export interface UpdateInstitucionDTO extends Partial<CreateInstitucionDTO> {}
 
+export interface RenovarInstitucionDTO {
+  fechaVencimiento: string;
+}
+
 export const institucionesService = {
   getAll: async (): Promise<Institucion[]> => {
     const response = await axios.get<Institucion[]>('/api/instituciones');
     return response.data;
   },
 
-  getById: async (id: string): Promise<Institucion> => {
+  getById: async (id: number | string): Promise<Institucion> => {
     const response = await axios.get<Institucion>(`/api/instituciones/${id}`);
     return response.data;
   },
@@ -43,27 +55,27 @@ export const institucionesService = {
     return response.data;
   },
 
-  update: async (id: string, data: UpdateInstitucionDTO): Promise<Institucion> => {
+  update: async (id: number | string, data: UpdateInstitucionDTO): Promise<Institucion> => {
     const response = await axios.put<Institucion>(`/api/instituciones/${id}`, data);
     return response.data;
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number | string): Promise<void> => {
     await axios.delete(`/api/instituciones/${id}`);
   },
 
-  activar: async (id: string): Promise<Institucion> => {
+  activar: async (id: number | string): Promise<Institucion> => {
     const response = await axios.patch<Institucion>(`/api/instituciones/${id}/activar`);
     return response.data;
   },
 
-  suspender: async (id: string): Promise<Institucion> => {
+  suspender: async (id: number | string): Promise<Institucion> => {
     const response = await axios.patch<Institucion>(`/api/instituciones/${id}/suspender`);
     return response.data;
   },
 
-  renovar: async (id: string): Promise<Institucion> => {
-    const response = await axios.patch<Institucion>(`/api/instituciones/${id}/renovar`);
+  renovar: async (id: number | string, data: RenovarInstitucionDTO): Promise<Institucion> => {
+    const response = await axios.patch<Institucion>(`/api/instituciones/${id}/renovar`, data);
     return response.data;
   },
 };

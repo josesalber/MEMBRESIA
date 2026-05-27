@@ -3,11 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { Search, Edit, Power, Ban, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { institucionesService, Institucion } from '../services/instituciones.service';
+import {
+  institucionesService,
+  Institucion,
+  tipoInstitucionLabel,
+} from '../services/instituciones.service';
 import { StatusBadge } from '../components/StatusBadge';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Loader } from '../components/Loader';
 import { EmptyState } from '../components/EmptyState';
+import { getApiErrorMessage } from '../lib/apiError';
 
 export function Instituciones() {
   const navigate = useNavigate();
@@ -31,8 +36,8 @@ export function Instituciones() {
       toast.success('Institución eliminada');
       closeModal();
     },
-    onError: () => {
-      toast.error('No se pudo eliminar la institución');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudo eliminar la institución'));
     },
   });
 
@@ -43,8 +48,8 @@ export function Instituciones() {
       toast.success('Institución activada');
       closeModal();
     },
-    onError: () => {
-      toast.error('No se pudo activar la institución');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudo activar la institución'));
     },
   });
 
@@ -55,8 +60,8 @@ export function Instituciones() {
       toast.success('Institución suspendida');
       closeModal();
     },
-    onError: () => {
-      toast.error('No se pudo suspender la institución');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudo suspender la institución'));
     },
   });
 
@@ -175,7 +180,9 @@ export function Instituciones() {
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {institucion.nombre}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{institucion.tipo}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {tipoInstitucionLabel[institucion.tipo]}
+                      </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{institucion.subdominio}</td>
                     <td className="px-6 py-4">
                       <StatusBadge estado={institucion.estado} />

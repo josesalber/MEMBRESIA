@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { authService } from '../services/auth.service';
 import { useAuth } from '../store/AuthContext';
+import { getApiErrorMessage } from '../lib/apiError';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -36,7 +37,7 @@ export function Login() {
       toast.success('Bienvenido a KUI');
       navigate('/');
     } catch (error) {
-      toast.error('Credenciales inválidas');
+      toast.error(getApiErrorMessage(error, 'Credenciales inválidas'));
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +60,9 @@ export function Login() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Iniciar Sesión</h2>
             <p className="text-gray-600">Ingresa tus credenciales para continuar</p>
+            <p className="mt-2 text-sm text-orange-700 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2">
+              Demo: admin@backend.com / admin123
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

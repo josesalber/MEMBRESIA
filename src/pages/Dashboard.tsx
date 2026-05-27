@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Building2, AlertCircle, Clock, TrendingUp } from 'lucide-react';
-import { institucionesService, Institucion } from '../services/instituciones.service';
+import {
+  institucionesService,
+  Institucion,
+  tipoInstitucionLabel,
+} from '../services/instituciones.service';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { Loader } from '../components/Loader';
@@ -83,7 +87,9 @@ export function Dashboard() {
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {institucion.nombre}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{institucion.tipo}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {tipoInstitucionLabel[institucion.tipo]}
+                    </td>
                     <td className="px-6 py-4">
                       <StatusBadge estado={institucion.estado} />
                     </td>

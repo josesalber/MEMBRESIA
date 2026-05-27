@@ -32,7 +32,7 @@ pnpm install
 
 # Configurar variables de entorno
 # Crear archivo .env y configurar:
-VITE_API_URL=http://localhost:3000
+VITE_CENTRAL_BACKEND_URL=http://localhost:8080
 ```
 
 ## 🎯 Uso
@@ -49,7 +49,20 @@ La aplicación está configurada para conectarse a un backend REST. Asegúrate d
 - `DELETE /api/instituciones/:id` - Eliminar institución
 - `PATCH /api/instituciones/:id/activar` - Activar institución
 - `PATCH /api/instituciones/:id/suspender` - Suspender institución
-- `PATCH /api/instituciones/:id/renovar` - Renovar institución
+- `PATCH /api/instituciones/:id/renovar` - Renovar institución con `{ fechaVencimiento }`
+- `GET /api/licencia/validar/:apiKey` - Validar licencia sin auth
+- `GET /api/licencia/validar/id/:institutionId` - Validar licencia por id sin auth
+
+### Contrato de instituciones
+
+- `tipo` usa valores `COLEGIO`, `INSTITUTO`, `ACADEMIA`
+- Respuesta incluye `apiKey` y `fechaCreacion`
+- `estado` usa valores `ACTIVO`, `SUSPENDIDO`, `VENCIDO`
+
+### Login demo
+
+- Email: `admin@backend.com`
+- Password: `admin123`
 
 ## 🎨 Paleta de Colores
 

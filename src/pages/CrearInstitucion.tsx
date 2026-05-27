@@ -5,11 +5,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
-import { institucionesService, CreateInstitucionDTO, TipoInstitucion } from '../services/instituciones.service';
+import {
+  institucionesService,
+  CreateInstitucionDTO,
+  TIPOS_INSTITUCION,
+  tipoInstitucionLabel,
+  TipoInstitucion,
+} from '../services/instituciones.service';
+import { getApiErrorMessage } from '../lib/apiError';
 
 const institucionSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-  tipo: z.enum(['Colegio', 'Instituto', 'Academia'] as const),
+  tipo: z.enum(['COLEGIO', 'INSTITUTO', 'ACADEMIA'] as const),
   emailContacto: z.string().email('Email inválido'),
   subdominio: z.string().min(3, 'El subdominio debe tener al menos 3 caracteres'),
   backendUrl: z.string().url('URL inválida'),
@@ -37,8 +44,8 @@ export function CrearInstitucion() {
       toast.success('Institución creada correctamente');
       navigate('/instituciones');
     },
-    onError: () => {
-      toast.error('No se pudo registrar la institución');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'No se pudo registrar la institución'));
     },
   });
 
@@ -85,9 +92,11 @@ export function CrearInstitucion() {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
             >
               <option value="">Selecciona un tipo</option>
-              <option value="Colegio">Colegio</option>
-              <option value="Instituto">Instituto</option>
-              <option value="Academia">Academia</option>
+              {TIPOS_INSTITUCION.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipoInstitucionLabel[tipo]}
+                </option>
+              ))}
             </select>
             {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo.message}</p>}
           </div>

@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+const TOKEN_KEY = 'kui_token';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -9,20 +11,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('kui_token');
-    setIsAuthenticated(!!token);
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem(TOKEN_KEY);
+  });
 
   const login = (token: string) => {
-    localStorage.setItem('kui_token', token);
+    localStorage.setItem(TOKEN_KEY, token);
     setIsAuthenticated(true);
   };
 
   const logout = () => {
-    localStorage.removeItem('kui_token');
+    localStorage.removeItem(TOKEN_KEY);
     setIsAuthenticated(false);
   };
 
