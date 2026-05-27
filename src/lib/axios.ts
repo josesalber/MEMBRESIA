@@ -6,7 +6,7 @@ const axiosInstance = axios.create({
   baseURL:
     import.meta.env.VITE_CENTRAL_BACKEND_URL ||
     import.meta.env.VITE_API_URL ||
-    'http://172.17.248.228:8080',
+    'https://backend-central-lo7f.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
